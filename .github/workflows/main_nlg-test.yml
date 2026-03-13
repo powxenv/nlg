@@ -79,4 +79,5 @@ jobs:
           app-name: 'nlg-test'
           slot-name: 'Production'
           package: .
+          startup-command: 'bash /home/site/wwwroot/startup.sh'
           
