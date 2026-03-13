@@ -1,0 +1,10 @@
+{
+  "skills": {
+    "skill:shadcn": {
+      "name": "shadcn",
+      "url": "https://github.com/shadcn/ui.git",
+      "branch": "main",
+      "commit": "fc9705665cda1e7dd87a75f29f072b9d942956e2"
+    }
+  }
+}
