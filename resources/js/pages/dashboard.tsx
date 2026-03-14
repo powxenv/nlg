@@ -146,6 +146,13 @@ export default function Dashboard({ products }: DashboardProps) {
                         </Alert>
                     )}
 
+                    {flash.error && (
+                        <Alert variant="destructive">
+                            <AlertTitle>Sync failed</AlertTitle>
+                            <AlertDescription>{flash.error}</AlertDescription>
+                        </Alert>
+                    )}
+
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="text-sm text-muted-foreground">
                             Showing {products.from ?? 0} to {products.to ?? 0}{' '}

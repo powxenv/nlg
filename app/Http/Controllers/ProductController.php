@@ -6,6 +6,7 @@ use App\Data\ProductData;
 use App\Data\ProductPayloadData;
 use App\Http\Requests\ProductRequest;
 use App\Models\Product;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Http;
@@ -61,10 +62,40 @@ class ProductController extends Controller
      */
     public function sync(): RedirectResponse
     {
-        $syncedProducts = collect(
-            Http::get('https://fakestoreapi.com/products')->throw()->json()
-        )
-            ->map(fn (array $product): ProductPayloadData => ProductPayloadData::fromExternal($product))
+        try {
+            $response = Http::acceptJson()
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (compatible; nlg-test/1.0; +https://nlg-test.azurewebsites.net)',
+                    'Accept-Language' => 'en-US,en;q=0.9',
+                    'Referer' => config('app.url'),
+                ])
+                ->timeout(15)
+                ->get('https://fakestoreapi.com/products');
+        } catch (ConnectionException) {
+            return to_route('products.index')->with(
+                'error',
+                'Product sync failed because the external API could not be reached.',
+            );
+        }
+
+        if (! $response->successful()) {
+            return to_route('products.index')->with(
+                'error',
+                'Product sync failed because the external API rejected the request.',
+            );
+        }
+
+        $products = $response->json();
+
+        if (! \is_array($products)) {
+            return to_route('products.index')->with(
+                'error',
+                'Product sync failed because the external API returned invalid data.',
+            );
+        }
+
+        $syncedProducts = collect($products)
+            ->map(ProductPayloadData::fromExternal(...))
             ->each(function (ProductPayloadData $product): void {
                 Product::query()->updateOrCreate(
                     ['name' => $product->name],

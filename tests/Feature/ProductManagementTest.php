@@ -111,6 +111,22 @@ test('products can be synced from the fake store api', function () {
     ]);
 });
 
+test('sync failure returns an error message instead of throwing', function () {
+    Http::fake([
+        'https://fakestoreapi.com/products' => Http::response(
+            '<title>Just a moment...</title>',
+            403,
+            ['Content-Type' => 'text/html'],
+        ),
+    ]);
+
+    $this->post(route('products.sync'))
+        ->assertRedirect(route('products.index'))
+        ->assertSessionHas('error', 'Product sync failed because the external API rejected the request.');
+
+    expect(Product::query()->count())->toBe(0);
+});
+
 test('the internal api returns local products as json', function () {
     $product = Product::factory()->create([
         'name' => 'API Product',
